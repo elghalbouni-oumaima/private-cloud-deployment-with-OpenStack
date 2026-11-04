@@ -127,8 +127,6 @@ Result: instance `ACTIVE` on `tp-net` (192.168.50.0/24), scheduled on **compute1
 
 ## 5. Screenshots
 
-Add your own captures here (taken on our deployment):
-
 | Evidence | File |
 |---|---|
 | Hardware check of each machine | `screenshots/hardware.png` |
