@@ -1,7 +1,7 @@
 # Private Cloud with OpenStack: Multi-Node Deployment (Atelier 2)
 
 > Academic lab project: ID3, ENSAH, Abdelmalek Essaadi University, 2026/2027
-> Team: **Oumaima EL GHALBOUNI** (Controller), **Yousra KHALOU** (Compute 1), **Firdaws EL HADDOUCHI** (Compute 2)
+> Team: **Oumaima EL GHALBOUNI** (Controller), **Yousra KHALLOU** (Compute 1), **Firdawss EL HADDOUCHI** (Compute 2)
 
 This repository summarizes how we built a small **private cloud (IaaS)** with **OpenStack**: one controller node and two compute nodes running on three different laptops, connected through a VPN. The detailed report (commands, screenshots, explanations) is provided separately and extends this README.
 
