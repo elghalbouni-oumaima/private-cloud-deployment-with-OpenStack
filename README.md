@@ -129,9 +129,8 @@ Result: instance `ACTIVE` on `tp-net` (192.168.50.0/24), scheduled on **compute1
 
 | Evidence | File |
 |---|---|
-| Hardware check of each machine | `screenshots/hardware.png` |
 | DevStack completion summary | `screenshots/stack-complete.png` |
-| `service list`, `network list`, `image list` | `screenshots/controller-check.png` |
+| `service list`, `network list`, `image list` | `screenshots/controller-check-*.png` |
 | Compute nodes `up` and hypervisor list | `screenshots/compute-nodes.png` |
 | Flavor, network, router, keypair, rules | `screenshots/part3-*.png` |
 | Instance `ACTIVE` on compute1 | `screenshots/instance.png` |
