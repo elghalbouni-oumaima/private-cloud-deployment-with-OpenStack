@@ -140,7 +140,6 @@ Add your own captures here (taken on our deployment):
 | Ping, SSH, security-rule test | `screenshots/part4-*.png` |
 | Horizon dashboard and hypervisors | `screenshots/horizon-*.png` |
 
-_Do not include passwords or the content of `mykey.pem`._
 
 ## 6. Problems met and solutions
 
