@@ -1,4 +1,4 @@
-# Private Cloud with OpenStack: Multi-Node Deployment (Atelier 2)
+# Private Cloud with OpenStack: Multi-Node Deployment
 
 > Academic lab project: ID3, ENSAH, Abdelmalek Essaadi University, 2026/2027
 > Team: **Oumaima EL GHALBOUNI** (Controller), **Yousra KHALLOU** (Compute 1), **Firdawss EL HADDOUCHI** (Compute 2)
@@ -127,35 +127,74 @@ Result: instance `ACTIVE` on `tp-net` (192.168.50.0/24), scheduled on **compute1
 
 ## 5. Screenshots
 
-Add your own captures here (taken on our deployment):
-
 | Evidence | File |
 |---|---|
-| Hardware check of each machine | `screenshots/hardware.png` |
 | DevStack completion summary | `screenshots/stack-complete.png` |
-| `service list`, `network list`, `image list` | `screenshots/controller-check.png` |
+| `service list`, `network list`, `image list` | `screenshots/controller-check-*.png` |
 | Compute nodes `up` and hypervisor list | `screenshots/compute-nodes.png` |
 | Flavor, network, router, keypair, rules | `screenshots/part3-*.png` |
 | Instance `ACTIVE` on compute1 | `screenshots/instance.png` |
 | Ping, SSH, security-rule test | `screenshots/part4-*.png` |
 | Horizon dashboard and hypervisors | `screenshots/horizon-*.png` |
 
-_Do not include passwords or the content of `mykey.pem`._
 
 ## 6. Problems met and solutions
 
+### 1. Network and VPN
+
 | Problem | Cause | Solution |
 |---|---|---|
-| RabbitMQ would not start | `controller` resolved to an IP the VM did not own | Aligned IP, `/etc/hosts` and `local.conf` |
-| Empty `keystone` / `cinder` folders | Interrupted git clones | Deleted them, re-cloned with `--depth 1` and retry loop |
-| Very slow downloads (5 to 10 KiB/s) | Weak connection | Shallow clones, longer git timeout |
-| `local.conf` settings ignored | Lines placed after a `[[post-config]]` block | Moved them into `[[local\|localrc]]` |
-| MySQL failed to restart | MariaDB leftovers | Purged MariaDB, reinstalled MySQL |
-| etcd failed to start | Ubuntu `etcd` already used ports 2379/2380 | Stopped and removed it |
-| IPv6 subnet MTU error | Tailscale MTU is 1280 | Disabled IPv6 (`IP_VERSION=4`) |
-| `Missing value auth-url` | Credentials not loaded | `source ~/devstack/openrc admin admin` |
-| Security rule command ambiguous | Two groups named `default` | Used the security group ID |
-| Instance stuck in `BUILD` | compute1 was `down` (VPN or sleep) | Restored the node, recreated the instance |
+| VMs on different subnets (`192.168.1.x`, `192.168.0.x`, `100.93.x.x`) | Each laptop was on a different network | Joined all nodes to a **Tailscale VPN** and used the Tailscale IPs |
+| `ping` blocked even to the gateway | Network policy | Tested with `curl -sI https://opendev.org` instead |
+| `nmcli con up` failed, then "Network is unreachable" | The connection was left half-configured after switching static to DHCP | Re-activated the connection, restarted NetworkManager, checked the default route |
+| Clock off by 1 hour on a node | Time not synchronized | `sudo systemctl restart systemd-timesyncd` |
+| `tailscale up` refused to run, `NeedsLogin` | Existing flags and an unauthenticated session | `sudo tailscale up --hostname=controller` and logged in through the link |
+| `tailscale ping compute1`: `no matching peer` | compute1 had not joined the tailnet yet | Waited until the teammates joined, then used their `100.x` IPs |
+
+### 2. Installation (DevStack)
+
+| Problem | Cause | Solution |
+|---|---|---|
+| RabbitMQ would not start | `controller` resolved to an IP the VM did not own | Matched the real IP, `/etc/hosts` and `local.conf` |
+| Empty `keystone` and `cinder` folders (`no commits yet`, `setup.cfg` missing) | Interrupted git clones | Deleted them and cloned again with `--depth 1` |
+| Git at 5 to 10 KiB/s, `curl 56` TLS errors | Weak connection | Shallow clones with a retry loop, `http.version HTTP/1.1` |
+| `Maximum of 3 git retries reached` | DevStack's 600 s clone limit was too short | Pre-cloned the repos, `GIT_TIMEOUT=3600` |
+| `local.conf` settings ignored (Cinder still enabled) | Lines appended after `[[post-config]]`, and `c-bak` was not disabled | Moved them above that block, `disable_service c-api c-sch c-vol c-bak cinder` |
+| MySQL failed to restart | MariaDB leftovers (I had advised pre-installing `mariadb-server`, but DevStack uses MySQL 8) | Purged MariaDB, reinstalled MySQL |
+| etcd failed: `address already in use` | The Ubuntu `etcd` service held ports 2379 and 2380 | Stopped, disabled and removed it |
+| `Device or resource busy` on `/opt/stack/data/etcd` | It is a tmpfs mount point used by DevStack | Left it alone |
+| `409 ... MTU ... minimum of 1280` (IPv6 subnet) | Tailscale MTU is 1280 | `IP_VERSION=4` |
+| `pip install`: `externally-managed-environment` | Ubuntu 24.04 protection | Used DevStack's venv pip, never `--break-system-packages` |
+| compute2 stuck cloning `requirements` | DevStack forces a full clone with no timeout | Pre-cloned it with `--depth 1` |
+| `c-vol` in a compute node's `ENABLED_SERVICES` | Cinder is disabled on the controller | Removed `c-vol` |
+
+### 3. Command and CLI errors
+
+| Problem | Cause | Solution |
+|---|---|---|
+| `Missing value auth-url` | Credentials not loaded | `source ~/devstack/openrc admin admin` as `stack` |
+| `No recognized column names` on `hypervisor show` | Newer client dropped those columns | Used Placement (`resource provider ...`) or skipped it |
+| Syntax error near `newline` | Typed `<UUID>` literally | Replaced placeholders with real values, without `<>` |
+| `More than one SecurityGroup ... 'default'` | Several projects have a group named `default` | Used the security group ID |
+| `More than one Server exists with the name 'test1'` | Two instances with the same name | Used the instance ID, deleted the duplicate |
+| `Guest does not have a console available` | The instance was `SHUTOFF` | Started it first |
+| Test 4: rule not deleted, ping still worked | I gave `ICMP_RULE_ID` as a placeholder, and `-c Protocol` should be `-c "IP Protocol"` | Used the real rule ID |
+
+### 4. Instance and network
+
+| Problem | Cause | Solution |
+|---|---|---|
+| Instance stuck in `BUILD`, host `None` | compute1 was `down`, so the scheduler had no host | Restored compute1, recreated the instance (or used `--availability-zone nova:compute2`) |
+| compute1 `down`, OVN agents `XXX` | Laptop asleep, VPN lost or services stopped (cause not confirmed) | Restarted `devstack@*` services, kept the laptop awake |
+| Floating IP unreachable, `br-ex` DOWN | `br-ex` lost `172.24.4.1/24`, probably after a reboot | `ip addr add 172.24.4.1/24 dev br-ex` and `ip link set br-ex up` |
+| `Destination Host Unreachable` after that | `tp-router`'s gateway was bound to compute1, which was down | Raised the controller's gateway priority in OVN, or brought compute1 back |
+
+### 5. Observations worth citing
+
+- Network MTU is **1222** (Tailscale 1280 minus Geneve overhead).
+- Hardware virtualization was unavailable (`egrep -c '(vmx|svm)'` returned 0), so **QEMU** was used, which made VM boots slow.
+- The control plane stayed healthy while a worker node dropped out, a typical distributed-systems failure.
+
 
 ## 7. Skills demonstrated
 
