@@ -125,20 +125,8 @@ Result: instance `ACTIVE` on `tp-net` (192.168.50.0/24), scheduled on **compute1
 | Lifecycle | `server stop`, `start`, `delete` | `SHUTOFF`, `ACTIVE`, removed |
 | Monitoring | Horizon: Admin → Hypervisors / Instances | resources visible |
 
-## 5. Screenshots
 
-| Evidence | File |
-|---|---|
-| DevStack completion summary | `screenshots/stack-complete.png` |
-| `service list`, `network list`, `image list` | `screenshots/controller-check-*.png` |
-| Compute nodes `up` and hypervisor list | `screenshots/compute-nodes.png` |
-| Flavor, network, router, keypair, rules | `screenshots/part3-*.png` |
-| Instance `ACTIVE` on compute1 | `screenshots/instance.png` |
-| Ping, SSH, security-rule test | `screenshots/part4-*.png` |
-| Horizon dashboard and hypervisors | `screenshots/horizon-*.png` |
-
-
-## 6. Problems met and solutions
+## 5. Problems met and solutions
 
 ### 1. Network and VPN
 
@@ -196,7 +184,7 @@ Result: instance `ACTIVE` on `tp-net` (192.168.50.0/24), scheduled on **compute1
 - The control plane stayed healthy while a worker node dropped out, a typical distributed-systems failure.
 
 
-## 7. Skills demonstrated
+## 6. Skills demonstrated
 
 | Skill | Where we used it | Typical use in industry |
 |---|---|---|
@@ -213,12 +201,12 @@ Result: instance `ACTIVE` on `tp-net` (192.168.50.0/24), scheduled on **compute1
 | **Documentation** | Report, error log, architecture | Professional engineering practice |
 
 
-## 8. Limits and next steps
+## 7. Limits and next steps
 
 - Lab setup: QEMU emulation, VPN transport, one controller (no high availability), DevStack (not production-grade).
 - Possible next steps: automate with Ansible/Terraform, add Cinder volumes, add a second compute scheduling test, move to Kolla-Ansible or a production-style install, learn Kubernetes on top of IaaS.
 
-## 9. References
+## 8. References
 
 - OpenStack documentation: https://docs.openstack.org/
 - DevStack documentation (multi-node lab): https://docs.openstack.org/devstack/latest/
